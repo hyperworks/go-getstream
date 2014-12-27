@@ -13,9 +13,9 @@ func TestFeed_AddActivity(t *testing.T) {
 	feed := client.Feed(TestFeedSlug.Slug, TestFeedSlug.ID)
 	activity := NewTestActivity()
 
-	result, e := feed.AddActivity(activity)
+	addedActivity, e := feed.AddActivity(activity)
 	a.NoError(t, e)
-	a.NotEqual(t, activity, result, "AddActivity should not modify existing instance.")
-	a.NotNil(t, result)
-	a.NotEmpty(t, result.ID)
+	a.NotEqual(t, activity, addedActivity, "AddActivity should not modify existing instance.")
+	a.NotNil(t, addedActivity)
+	a.NotEmpty(t, addedActivity.ID)
 }

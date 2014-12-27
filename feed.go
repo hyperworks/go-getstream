@@ -14,7 +14,6 @@ func (f *Feed) AddActivity(activity *Activity) (*Activity, error) {
 
 	result := &Activity{}
 	e := f.post(result, "feed/"+f.slug.Slug+"/"+f.slug.ID+"/", f.slug, activity)
-	// TODO: inspect result
 	return result, e
 }
 
