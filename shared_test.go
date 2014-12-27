@@ -2,16 +2,13 @@ package getstream_test
 
 import (
 	. "github.com/hyperworks/go-getstream"
+	"os"
 )
 
-// TODO: Move these to travis env.
 const (
-	TestAPIKey           = "ufx8newsg6ws"
-	TestAPISecret        = "37vnzuw6w6h39g2d6vvrkxvyvud5wx55dz3mn5vjvqzd59yy9dwxdzbkabv6crf6"
-	TestAppID            = "1649"
-	TestToken            = "x_oOp5aDI9IAbIjYQw4uFscKi2E"
-	TestTargetFeedToken  = "O9kSEnFPFAzoR071IEhYuLhP8mM"
-	TestTargetFeedToken2 = "K2S9epudS62ll2PA-BZbS9lECBI"
+	TestToken            = "xfHQwFY2MreP7bTGsoxQ7s2ebLA"
+	TestTargetFeedToken  = "3ZIhnU1vw524lXGsOd7wb0DkmrU"
+	TestTargetFeedToken2 = "IKjr7WED0O3ROLZGEIFrCSwBo4Y"
 
 	TestFeedSignature        = "userflat14483198-3e43-4a91-a2ed-fc88dcf2fd7b " + TestToken
 	TestTargetFeedSignature  = "userflat72d8ee6c-c27c-49a5-9311-c5e0e67356e5 " + TestTargetFeedToken
@@ -19,6 +16,10 @@ const (
 )
 
 var (
+	TestAPIKey    = os.Getenv("GETSTREAM_KEY")
+	TestAPISecret = os.Getenv("GETSTREAM_SECRET")
+	TestAppID     = os.Getenv("GETSTREAM_APPID")
+
 	TestFeedSlug        = Slug{"userflat", "14483198-3e43-4a91-a2ed-fc88dcf2fd7b", ""}
 	TestTargetFeedSlug  = Slug{"userflat", "72d8ee6c-c27c-49a5-9311-c5e0e67356e5", ""}
 	TestTargetFeedSlug2 = Slug{"userflat", "e1f8917c-e6dd-4d06-b6ff-59805d8e2b96", ""}
