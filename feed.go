@@ -1,12 +1,21 @@
 package getstream
 
+import ()
+
 type Feed struct {
-	name string
-	id   string
+	*Client
+	slug Slug
 }
 
-func (f *Feed) AddActivity(activity *Activity) error {
-	panic("not implemented.")
+func (f *Feed) Slug() Slug { return f.slug }
+
+func (f *Feed) AddActivity(activity *Activity) (*Activity, error) {
+	activity = SignActivity(f.secret, activity)
+
+	result := &Activity{}
+	e := f.post(result, "feed/"+f.slug.Slug+"/"+f.slug.ID+"/", f.slug, activity)
+	// TODO: inspect result
+	return result, e
 }
 
 func (f *Feed) AddActivities(activities []*Activity) error {

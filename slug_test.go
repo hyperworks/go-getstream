@@ -13,32 +13,48 @@ var _ json.Unmarshaler = &Slug{}
 var _ fmt.Stringer = Slug{}
 
 func TestSlug(t *testing.T) {
-	slug := NewSlug("test", "123", "token")
-	a.Equal(t, "test", slug.Slug())
-	a.Equal(t, "123", slug.ID())
-	a.Equal(t, "token", slug.Token())
-	a.Equal(t, "test:123 token", slug.String())
+	a.Equal(t, "test:456", Slug{"test", "456", ""}.String())
+	a.Equal(t, "test:123 token", Slug{"test", "123", "token"}.String())
+}
 
-	slug = NewSlug("test", "456", "")
-	a.Equal(t, "test:456", slug.String())
+func TestSlug_Valid(t *testing.T) {
+	valids := []Slug{
+		Slug{"feed", "123", ""},
+		Slug{"feed", "456", "token"},
+	}
+
+	for _, slug := range valids {
+		a.True(t, slug.Valid())
+	}
+
+	invalids := []Slug{
+		Slug{"", "", ""},
+		Slug{"feed", "", ""},
+		Slug{"", "123", ""},
+		Slug{"", "", "token"},
+	}
+
+	for _, slug := range invalids {
+		a.False(t, slug.Valid())
+	}
 }
 
 func TestSlug_JSON(t *testing.T) {
-	marshals := map[string]Slug{
-		`"slug:123"`:           NewSlug("slug", "123", ""),
-		`"slug:123 signature"`: NewSlug("slug", "123", "signature"),
+	marshals := map[Slug]string{
+		Slug{"slug", "123", ""}:          `"slug:123"`,
+		Slug{"slug", "123", "signature"}: `"slug:123 signature"`,
 	}
 
-	for str, slug := range marshals {
+	for slug, str := range marshals {
 		bytes, e := json.Marshal(slug)
 		a.NoError(t, e, "failed to marshal slug: "+slug.String())
 		a.Equal(t, str, string(bytes))
 	}
 
 	unmarshals := map[string]Slug{
-		`"slug:123"`:                NewSlug("slug", "123", ""),
-		`"slug:123 signature"`:      NewSlug("slug", "123", "signature"),
-		`["slug:123", "signature"]`: NewSlug("slug", "123", "signature"),
+		`"slug:123"`:                Slug{"slug", "123", ""},
+		`"slug:123 signature"`:      Slug{"slug", "123", "signature"},
+		`["slug:123", "signature"]`: Slug{"slug", "123", "signature"},
 	}
 
 	for str, slug := range unmarshals {

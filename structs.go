@@ -5,13 +5,14 @@ import (
 )
 
 type Activity struct {
-	Actor     string    `json:"actor"`
-	Verb      string    `json:"verb"`
-	Object    string    `json:"object"`
-	Target    string    `json:"target"`
-	Time      time.Time `json:"time"`
-	To        []string  `json:"to"`
-	ForeignID string    `json:"foreign_id"`
+	ID        string `json:"id,omitempty"`
+	Actor     Slug   `json:"actor"`
+	Verb      string `json:"verb"`
+	Object    Slug   `json:"object"`
+	Target    *Slug  `json:"target,omitempty"`
+	RawTime   string `json:"time,omitempty"`
+	To        []Slug `json:"to,omitempty"`
+	ForeignID string `json:"foreign_id,omitempty"`
 }
 
 type Options struct {

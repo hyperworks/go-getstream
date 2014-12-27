@@ -7,21 +7,26 @@ import (
 )
 
 type Slug struct {
-	slug, id, token string
+	Slug, ID, Token string
 }
 
-func NewSlug(slug, id, token string) Slug {
-	return Slug{slug, id, token}
+func (s Slug) Valid() bool {
+	return s.Slug != "" && s.ID != ""
 }
 
-func (s Slug) Slug() string  { return s.slug }
-func (s Slug) ID() string    { return s.id }
-func (s Slug) Token() string { return s.token }
+// Signature syntax is slug+id _without_ the colon, then the token.
+func (s Slug) Signature() string {
+	return s.Slug + s.ID + " " + s.Token
+}
+
+func (s Slug) WithToken(token string) Slug {
+	return Slug{s.Slug, s.ID, token}
+}
 
 func (s Slug) MarshalJSON() ([]byte, error) {
-	str := s.slug + ":" + s.id
-	if s.token != "" {
-		str += " " + s.token
+	str := s.Slug + ":" + s.ID
+	if s.Token != "" {
+		str += " " + s.Token
 	}
 
 	return json.Marshal(str)
@@ -41,7 +46,7 @@ func (s *Slug) UnmarshalJSON(bytes []byte) error {
 			}
 
 		case 2:
-			s.token = parts[1]
+			s.Token = parts[1]
 			if parts = strings.Split(parts[0], ":"); len(parts) != 2 {
 				return false
 			}
@@ -50,7 +55,7 @@ func (s *Slug) UnmarshalJSON(bytes []byte) error {
 			return false
 		}
 
-		s.slug, s.id = parts[0], parts[1]
+		s.Slug, s.ID = parts[0], parts[1]
 		return true
 	}
 
@@ -80,9 +85,9 @@ Outer:
 }
 
 func (s Slug) String() string {
-	result := s.slug + ":" + s.id
-	if s.token != "" {
-		result += " " + s.token
+	result := s.Slug + ":" + s.ID
+	if s.Token != "" {
+		result += " " + s.Token
 	}
 
 	return result
