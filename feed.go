@@ -13,7 +13,7 @@ func (f *Feed) AddActivity(activity *Activity) (*Activity, error) {
 	activity = SignActivity(f.secret, activity)
 
 	result := &Activity{}
-	e := f.post(result, "feed/"+f.slug.Slug+"/"+f.slug.ID+"/", f.slug, activity)
+	e := f.post(result, f.url(), f.slug, activity)
 	return result, e
 }
 
@@ -22,7 +22,13 @@ func (f *Feed) AddActivities(activities []*Activity) error {
 }
 
 func (f *Feed) Activities(opt *Options) ([]*Activity, error) {
-	panic("not implemented.")
+	result := ActivitiesResult{}
+	e := f.get(&result, f.url(), f.slug)
+	return result.Results, e
+}
+
+func (f *Feed) RemoveActivity(id string) error {
+	return f.del(f.url()+id+"/", f.slug)
 }
 
 func (f *Feed) Follow(feed, id string) error {
@@ -35,4 +41,8 @@ func (f *Feed) Unfollow(feed, id string) error {
 
 func (f *Feed) Followers(opt *Options) ([]*Feed, error) {
 	panic("not implemented.")
+}
+
+func (f *Feed) url() string {
+	return "feed/" + f.slug.Slug + "/" + f.slug.ID + "/"
 }

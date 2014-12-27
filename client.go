@@ -50,18 +50,32 @@ func (c *Client) Feed(slug, id string) *Feed {
 	}
 }
 
+func (c *Client) get(result interface{}, path string, slug Slug) error {
+	return c.request(result, "GET", path, slug, nil)
+}
+
 func (c *Client) post(result interface{}, path string, slug Slug, payload interface{}) error {
+	return c.request(result, "POST", path, slug, payload)
+}
+
+func (c *Client) del(path string, slug Slug) error {
+	return c.request(nil, "DELETE", path, slug, nil)
+}
+
+func (c *Client) request(result interface{}, method, path string, slug Slug, payload interface{}) error {
 	absUrl, e := c.absoluteUrl(path)
 	if e != nil {
 		return e
 	}
 
-	buffer, e := json.Marshal(payload)
-	if e != nil {
-		return e
+	buffer := []byte{}
+	if payload != nil {
+		if buffer, e = json.Marshal(payload); e != nil {
+			return e
+		}
 	}
 
-	req, e := http.NewRequest("POST", absUrl.String(), bytes.NewBuffer(buffer))
+	req, e := http.NewRequest(method, absUrl.String(), bytes.NewBuffer(buffer))
 	if e != nil {
 		return e
 	}
@@ -84,8 +98,10 @@ func (c *Client) post(result interface{}, path string, slug Slug, payload interf
 
 	switch {
 	case 200 <= resp.StatusCode && resp.StatusCode < 300: // SUCCESS
-		if e = json.Unmarshal(buffer, result); e != nil {
-			return e
+		if result != nil {
+			if e = json.Unmarshal(buffer, result); e != nil {
+				return e
+			}
 		}
 
 	default:
@@ -107,7 +123,7 @@ func (c *Client) absoluteUrl(path string) (result *url.URL, e error) {
 	}
 
 	// DEBUG: Use this line to send stuff to a proxy instead.
-	// c.baseURL, _ = url.Parse("http://0.0.0.0:8080/")
+	// c.baseURL, _ = url.Parse("http://0.0.0.0:8000/")
 	result = c.baseURL.ResolveReference(result)
 
 	qs := result.Query()
