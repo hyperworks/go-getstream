@@ -18,7 +18,13 @@ func (f *Feed) AddActivity(activity *Activity) (*Activity, error) {
 }
 
 func (f *Feed) AddActivities(activities []*Activity) error {
-	panic("not implemented.")
+	signeds := make([]*Activity, len(activities), len(activities))
+	for i, activity := range activities {
+		signeds[i] = SignActivity(f.secret, activity)
+	}
+
+	// TODO: A result type to recieve the listing result.
+	panic("not yet implemented.")
 }
 
 func (f *Feed) Activities(opt *Options) ([]*Activity, error) {
