@@ -4,6 +4,7 @@ import (
 	. "github.com/hyperworks/go-getstream"
 )
 
+// TODO: Move these to travis env.
 const (
 	TestAPIKey           = "ufx8newsg6ws"
 	TestAPISecret        = "37vnzuw6w6h39g2d6vvrkxvyvud5wx55dz3mn5vjvqzd59yy9dwxdzbkabv6crf6"
