@@ -1,7 +1,7 @@
 # GO-GETSREAM
 
-![godoc](https://godoc.org/github.com/hyperworks/go-getstream?status.svg)
-![travis build](https://api.travis-ci.org/hyperworks/go-getstream.svg)
+[![godoc](https://godoc.org/github.com/hyperworks/go-getstream?status.svg)](https://godoc.org/github.com/hyperworks/go-getstream)
+[![travis build](https://api.travis-ci.org/hyperworks/go-getstream.svg)](https://travis-ci.org/hyperworks/go-getstream)
 
 WIP [getstream.io](getstream.io) client in pure GO.
 
