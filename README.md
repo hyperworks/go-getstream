@@ -1,4 +1,4 @@
-# GO-GETSREAM
+# GO-GETSTREAM
 
 [![godoc](https://godoc.org/github.com/hyperworks/go-getstream?status.svg)](https://godoc.org/github.com/hyperworks/go-getstream)
 [![travis build](https://api.travis-ci.org/hyperworks/go-getstream.svg)](https://travis-ci.org/hyperworks/go-getstream)
