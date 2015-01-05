@@ -89,9 +89,9 @@ func (c *Client) request(result interface{}, method, path string, slug Slug, pay
 	if e != nil {
 		return e
 	}
+	defer resp.Body.Close()
 
 	buffer, e = ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
 	if e != nil {
 		return e
 	}
