@@ -125,6 +125,9 @@ func (f *Feed) request(method, path string, signature string, payload []byte) ([
 		return nil, err
 	}
 
+	// debug Println
+	//fmt.Println(string(body))
+
 	// handle the response
 	switch {
 	case resp.StatusCode/100 == 2: // SUCCESS
@@ -136,9 +139,9 @@ func (f *Feed) request(method, path string, signature string, payload []byte) ([
 		var respErr []byte
 		err = json.Unmarshal(respErr, err)
 		if err != nil {
-			return nil, errors.New(string(respErr))
+			return nil, err
 		}
-		return nil, err
+		return nil, errors.New(string(respErr))
 	}
 }
 

@@ -1,6 +1,9 @@
 package getstream
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Feed struct {
 	Client   *Client
@@ -23,22 +26,22 @@ func (f *Feed) AddActivity(input *PostActivityInput) (*PostActivityOutput, error
 
 	payload, err := json.Marshal(signedActivityInput.Activity)
 	if err != nil {
+		fmt.Println("marshal input error")
 		return nil, err
 	}
 
 	resultBytes, err := f.post(f.url(), f.Signature(), payload)
-
-	result := &Activity{}
-	err = json.Unmarshal(resultBytes, result)
 	if err != nil {
 		return nil, err
 	}
 
-	return &PostActivityOutput{
-		Activities: []*Activity{
-			result,
-		},
-	}, err
+	output := &PostActivityOutput{}
+	err = json.Unmarshal(resultBytes, output)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, err
 }
 
 func (f *Feed) AddActivities(input []*PostActivityInput) error {

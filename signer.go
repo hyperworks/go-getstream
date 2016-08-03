@@ -37,7 +37,13 @@ func (s Signer) signActivity(activityInput PostActivityInput) PostActivityInput 
 	activityInput.Activity.To = []string{}
 
 	for _, feed := range activityInput.To {
-		activityInput.Activity.To = append(activityInput.Activity.To, s.generateToken(feed.FeedSlug+feed.UserID))
+
+		to := feed.FeedID()
+		if feed.Token != "" {
+			to += " " + s.generateToken(feed.FeedSlug+feed.UserID)
+		}
+
+		activityInput.Activity.To = append(activityInput.Activity.To, to)
 	}
 
 	return activityInput

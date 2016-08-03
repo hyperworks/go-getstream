@@ -6,9 +6,15 @@ type PostActivityInput struct {
 }
 
 type PostActivityOutput struct {
-	Duration   string      `json:"duration"`
-	Next       string      `json:"next"`
-	Activities []*Activity `json:"results"`
+	ID        string     `json:"id,omitempty"`
+	Actor     string     `json:"actor"`
+	Verb      string     `json:"verb"`
+	Object    string     `json:"object"`
+	Target    string     `json:"target,omitempty"`
+	RawTime   string     `json:"time,omitempty"`
+	To        [][]string `json:"to,omitempty"`
+	ForeignID string     `json:"foreign_id,omitempty"`
+	Data      string     `json:"data,omitempty"`
 }
 
 type Activity struct {
