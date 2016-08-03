@@ -15,10 +15,12 @@ type Client struct {
 	http    *http.Client
 	baseURL *url.URL // https://api.getstream.io/api/
 
-	key      string
-	secret   string
-	appID    string
-	location string // https://location-api.getstream.io/api/
+	Key      string
+	Secret   string
+	AppID    string
+	Location string // https://location-api.getstream.io/api/
+
+	signer *Signer
 }
 
 // New returns a getstream client.
@@ -42,10 +44,14 @@ func New(key, secret, appID, location string) (*Client, error) {
 		http:    &http.Client{},
 		baseURL: baseURL,
 
-		key:      key,
-		secret:   secret,
-		appID:    appID,
-		location: location,
+		Key:      key,
+		Secret:   secret,
+		AppID:    appID,
+		Location: location,
+
+		signer: &Signer{
+			Secret: secret,
+		},
 	}, nil
 }
 
@@ -56,36 +62,40 @@ func (c *Client) BaseURL() *url.URL { return c.baseURL }
 // Slug is the FeedGroup name
 // id is the Specific Feed inside a FeedGroup
 // to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
-func (c *Client) Feed(slug, id string) *Feed {
-	return &Feed{
-		Client: c,
-		slug:   SignSlug(c.secret, Slug{slug, id, ""}),
+func (c *Client) Feed(feedSlug string, userID string) *Feed {
+	feed := &Feed{
+		Client:   c,
+		FeedSlug: feedSlug,
+		UserID:   userID,
 	}
+
+	c.signer.signFeed(feed)
+	return feed
 }
 
 // get request helper
-func (c *Client) get(path string, slug Slug) ([]byte, error) {
-	res, err := c.request("GET", path, slug, nil)
+func (f *Feed) get(path string, signature string) ([]byte, error) {
+	res, err := f.request("GET", path, signature, nil)
 	return res, err
 }
 
 // post request helper
-func (c *Client) post(path string, slug Slug, payload []byte) ([]byte, error) {
-	res, err := c.request("POST", path, slug, payload)
+func (f *Feed) post(path string, signature string, payload []byte) ([]byte, error) {
+	res, err := f.request("POST", path, signature, payload)
 	return res, err
 }
 
 // delete request helper
-func (c *Client) del(path string, slug Slug) error {
-	_, err := c.request("DELETE", path, slug, nil)
+func (f *Feed) del(path string, signature string) error {
+	_, err := f.request("DELETE", path, signature, nil)
 	return err
 }
 
 // request helper
-func (c *Client) request(method, path string, slug Slug, payload []byte) ([]byte, error) {
+func (f *Feed) request(method, path string, signature string, payload []byte) ([]byte, error) {
 
 	// create url.URL instance with query params
-	absURL, err := c.absoluteUrl(path)
+	absURL, err := f.Client.absoluteURL(path)
 	if err != nil {
 		return nil, err
 	}
@@ -98,12 +108,12 @@ func (c *Client) request(method, path string, slug Slug, payload []byte) ([]byte
 
 	// set the Auth headers for the http request
 	req.Header.Set("Content-Type", "application/json")
-	if slug.Token != "" {
-		req.Header.Set("Authorization", slug.Signature())
+	if f.Token != "" {
+		req.Header.Set("Authorization", signature)
 	}
 
 	// perform the http request
-	resp, err := c.http.Do(req)
+	resp, err := f.Client.http.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +143,7 @@ func (c *Client) request(method, path string, slug Slug, payload []byte) ([]byte
 }
 
 // absoluteUrl create a url.URL instance and sets query params (bad bad bad!!!)
-func (c *Client) absoluteUrl(path string) (*url.URL, error) {
+func (c *Client) absoluteURL(path string) (*url.URL, error) {
 
 	fmt.Println("fix me, I'm a mutant")
 
@@ -147,11 +157,11 @@ func (c *Client) absoluteUrl(path string) (*url.URL, error) {
 	result = c.baseURL.ResolveReference(result)
 
 	qs := result.Query()
-	qs.Set("api_key", c.key)
-	if c.location == "" {
+	qs.Set("api_key", c.Key)
+	if c.Location == "" {
 		qs.Set("location", "unspecified")
 	} else {
-		qs.Set("location", c.location)
+		qs.Set("location", c.Location)
 	}
 	result.RawQuery = qs.Encode()
 
