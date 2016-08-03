@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
+// Client is used to connect to getstream.io
 type Client struct {
 	http    *http.Client
 	baseURL *url.URL // https://api.getstream.io/api/
@@ -19,7 +21,13 @@ type Client struct {
 	location string // https://location-api.getstream.io/api/
 }
 
-func Connect(key, secret, appID, location string) *Client {
+// New returns a getstream client.
+// Params :
+// - api key
+// - api secret
+// - appID
+// - region
+func New(key, secret, appID, location string) *Client {
 	baseURLStr := "https://api.getstream.io/api/v1.0/"
 	if location != "" {
 		baseURLStr = "https://" + location + "-api.getstream.io/api/v1.0/"
@@ -41,8 +49,13 @@ func Connect(key, secret, appID, location string) *Client {
 	}
 }
 
+// BaseURL returns the getstream URL for your location
 func (c *Client) BaseURL() *url.URL { return c.baseURL }
 
+// Feed returns a getstream feed
+// Slug is the FeedGroup name
+// id is the Specific Feed inside a FeedGroup
+// to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
 func (c *Client) Feed(slug, id string) *Feed {
 	return &Feed{
 		Client: c,
@@ -50,74 +63,79 @@ func (c *Client) Feed(slug, id string) *Feed {
 	}
 }
 
-func (c *Client) get(result interface{}, path string, slug Slug) error {
-	return c.request(result, "GET", path, slug, nil)
+// get request helper
+func (c *Client) get(path string, slug Slug) ([]byte, error) {
+	res, err := c.request("GET", path, slug, nil)
+	return res, err
 }
 
-func (c *Client) post(result interface{}, path string, slug Slug, payload interface{}) error {
-	return c.request(result, "POST", path, slug, payload)
+// post request helper
+func (c *Client) post(path string, slug Slug, payload []byte) ([]byte, error) {
+	res, err := c.request("POST", path, slug, payload)
+	return res, err
 }
 
+// delete request helper
 func (c *Client) del(path string, slug Slug) error {
-	return c.request(nil, "DELETE", path, slug, nil)
+	_, err := c.request("DELETE", path, slug, nil)
+	return err
 }
 
-func (c *Client) request(result interface{}, method, path string, slug Slug, payload interface{}) error {
-	absUrl, e := c.absoluteUrl(path)
-	if e != nil {
-		return e
+// request helper
+func (c *Client) request(method, path string, slug Slug, payload []byte) ([]byte, error) {
+
+	// create url.URL instance with query params
+	absURL, err := c.absoluteUrl(path)
+	if err != nil {
+		return nil, err
 	}
 
-	buffer := []byte{}
-	if payload != nil {
-		if buffer, e = json.Marshal(payload); e != nil {
-			return e
-		}
+	// create a new http request
+	req, err := http.NewRequest(method, absURL.String(), bytes.NewBuffer(payload))
+	if err != nil {
+		return nil, err
 	}
 
-	req, e := http.NewRequest(method, absUrl.String(), bytes.NewBuffer(buffer))
-	if e != nil {
-		return e
-	}
-
+	// set the Auth headers for the http request
 	req.Header.Set("Content-Type", "application/json")
 	if slug.Token != "" {
 		req.Header.Set("Authorization", slug.Signature())
 	}
 
-	resp, e := c.http.Do(req)
-	if e != nil {
-		return e
+	// perform the http request
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	buffer, e = ioutil.ReadAll(resp.Body)
-	if e != nil {
-		return e
+	// read the response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
 
+	// handle the response
 	switch {
-	case 200 <= resp.StatusCode && resp.StatusCode < 300: // SUCCESS
-		if result != nil {
-			if e = json.Unmarshal(buffer, result); e != nil {
-				return e
-			}
+	case resp.StatusCode/100 == 2: // SUCCESS
+		if body != nil {
+			return body, nil
 		}
-
+		return nil, nil
 	default:
-		err := &Error{}
-		if e = json.Unmarshal(buffer, err); e != nil {
-			panic(e)
-			return errors.New(string(buffer))
+		var respErr []byte
+		if err = json.Unmarshal(respErr, err); err != nil {
+			return nil, errors.New(string(respErr))
 		}
-
-		return err
+		return nil, err
 	}
-
-	return nil
 }
 
+// absoluteUrl create a url.URL instance and sets query params (bad bad bad!!!)
 func (c *Client) absoluteUrl(path string) (result *url.URL, e error) {
+
+	fmt.Println("fix me, I'm a mutant")
+
 	if result, e = url.Parse(path); e != nil {
 		return nil, e
 	}
