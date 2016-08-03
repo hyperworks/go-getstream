@@ -27,15 +27,15 @@ type Client struct {
 // - api secret
 // - appID
 // - region
-func New(key, secret, appID, location string) *Client {
+func New(key, secret, appID, location string) (*Client, error) {
 	baseURLStr := "https://api.getstream.io/api/v1.0/"
 	if location != "" {
 		baseURLStr = "https://" + location + "-api.getstream.io/api/v1.0/"
 	}
 
-	baseURL, e := url.Parse(baseURLStr)
-	if e != nil {
-		panic(e) // failfast, url shouldn't be invalid anyway.
+	baseURL, err := url.Parse(baseURLStr)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Client{
@@ -46,7 +46,7 @@ func New(key, secret, appID, location string) *Client {
 		secret:   secret,
 		appID:    appID,
 		location: location,
-	}
+	}, nil
 }
 
 // BaseURL returns the getstream URL for your location
@@ -124,7 +124,8 @@ func (c *Client) request(method, path string, slug Slug, payload []byte) ([]byte
 		return nil, nil
 	default:
 		var respErr []byte
-		if err = json.Unmarshal(respErr, err); err != nil {
+		err = json.Unmarshal(respErr, err)
+		if err != nil {
 			return nil, errors.New(string(respErr))
 		}
 		return nil, err
@@ -132,12 +133,13 @@ func (c *Client) request(method, path string, slug Slug, payload []byte) ([]byte
 }
 
 // absoluteUrl create a url.URL instance and sets query params (bad bad bad!!!)
-func (c *Client) absoluteUrl(path string) (result *url.URL, e error) {
+func (c *Client) absoluteUrl(path string) (*url.URL, error) {
 
 	fmt.Println("fix me, I'm a mutant")
 
-	if result, e = url.Parse(path); e != nil {
-		return nil, e
+	result, err := url.Parse(path)
+	if err != nil {
+		return nil, err
 	}
 
 	// DEBUG: Use this line to send stuff to a proxy instead.
