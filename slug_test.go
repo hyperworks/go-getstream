@@ -3,9 +3,10 @@ package getstream_test
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	. "github.com/hyperworks/go-getstream"
 	a "github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var _ json.Marshaler = Slug{}

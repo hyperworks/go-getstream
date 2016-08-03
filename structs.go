@@ -2,7 +2,7 @@ package getstream
 
 type PostActivityInput struct {
 	Activity *Activity
-	To       []*Feed
+	To       []*FlatFeed
 }
 
 type PostActivityOutput struct {

@@ -50,6 +50,21 @@ func New(key, secret, appID, location string) (*Client, error) {
 	}, nil
 }
 
+// FlatFeed returns a getstream feed
+// Slug is the FlatFeedGroup name
+// id is the Specific FlatFeed inside a FlatFeedGroup
+// to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
+func (c *Client) FlatFeed(feedSlug string, userID string) *FlatFeed {
+	feed := &FlatFeed{
+		Client:   c,
+		FeedSlug: feedSlug,
+		UserID:   userID,
+	}
+
+	c.signer.signFlatFeed(feed)
+	return feed
+}
+
 // BaseURL returns the getstream URL for your location
 func (c *Client) BaseURL() *url.URL { return c.baseURL }
 

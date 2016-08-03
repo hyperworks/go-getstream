@@ -6,7 +6,7 @@ import (
 	a "github.com/stretchr/testify/assert"
 )
 
-func TestFeed(t *testing.T) {
+func TestFlatFeed(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}

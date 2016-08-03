@@ -9,56 +9,41 @@ import (
 	"net/http"
 )
 
-type Feed struct {
+type FlatFeed struct {
 	Client   *Client
 	FeedSlug string
 	UserID   string
 	Token    string
 }
 
-func (f *Feed) Signature() string {
+func (f *FlatFeed) Signature() string {
 	return f.FeedSlug + f.UserID + " " + f.Token
 }
 
-func (f *Feed) FeedID() string {
+func (f *FlatFeed) FlatFeedID() string {
 	return f.FeedSlug + ":" + f.UserID
 }
 
-// Feed returns a getstream feed
-// Slug is the FeedGroup name
-// id is the Specific Feed inside a FeedGroup
-// to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
-func (c *Client) Feed(feedSlug string, userID string) *Feed {
-	feed := &Feed{
-		Client:   c,
-		FeedSlug: feedSlug,
-		UserID:   userID,
-	}
-
-	c.signer.signFeed(feed)
-	return feed
-}
-
 // get request helper
-func (f *Feed) get(path string, signature string) ([]byte, error) {
+func (f *FlatFeed) get(path string, signature string) ([]byte, error) {
 	res, err := f.request("GET", path, signature, nil)
 	return res, err
 }
 
 // post request helper
-func (f *Feed) post(path string, signature string, payload []byte) ([]byte, error) {
+func (f *FlatFeed) post(path string, signature string, payload []byte) ([]byte, error) {
 	res, err := f.request("POST", path, signature, payload)
 	return res, err
 }
 
 // delete request helper
-func (f *Feed) del(path string, signature string) error {
+func (f *FlatFeed) del(path string, signature string) error {
 	_, err := f.request("DELETE", path, signature, nil)
 	return err
 }
 
 // request helper
-func (f *Feed) request(method, path string, signature string, payload []byte) ([]byte, error) {
+func (f *FlatFeed) request(method, path string, signature string, payload []byte) ([]byte, error) {
 
 	// create url.URL instance with query params
 	absURL, err := f.Client.absoluteURL(path)
@@ -111,7 +96,7 @@ func (f *Feed) request(method, path string, signature string, payload []byte) ([
 	}
 }
 
-func (f *Feed) AddActivity(input *PostActivityInput) (*PostActivityOutput, error) {
+func (f *FlatFeed) AddActivity(input *PostActivityInput) (*PostActivityOutput, error) {
 
 	signedActivityInput := f.Client.signer.signActivity(*input)
 
@@ -137,7 +122,7 @@ func (f *Feed) AddActivity(input *PostActivityInput) (*PostActivityOutput, error
 	return output, err
 }
 
-func (f *Feed) AddActivities(input []*PostActivityInput) error {
+func (f *FlatFeed) AddActivities(input []*PostActivityInput) error {
 	signeds := make([]*Activity, len(input), len(input))
 	for i, activityInput := range input {
 		signedActivityInput := f.Client.signer.signActivity(*activityInput)
@@ -149,7 +134,7 @@ func (f *Feed) AddActivities(input []*PostActivityInput) error {
 	panic("not yet implemented.")
 }
 
-func (f *Feed) Activities(input *GetActivityInput) (*GetActivityOutput, error) {
+func (f *FlatFeed) Activities(input *GetActivityInput) (*GetActivityOutput, error) {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/"
 
@@ -167,25 +152,25 @@ func (f *Feed) Activities(input *GetActivityInput) (*GetActivityOutput, error) {
 	return output, err
 }
 
-func (f *Feed) RemoveActivity(id string) error {
+func (f *FlatFeed) RemoveActivity(id string) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + id + "/"
 
 	return f.del(endpoint, f.Signature())
 }
 
-func (f *Feed) Follow(feed, id string) error {
+func (f *FlatFeed) Follow(feed, id string) error {
 	panic("not implemented.")
 }
 
-func (f *Feed) Unfollow(feed, id string) error {
+func (f *FlatFeed) Unfollow(feed, id string) error {
 	panic("not implemented.")
 }
 
-// func (f *Feed) Followers(opt *Options) ([]*Feed, error) {
+// func (f *FlatFeed) Followers(opt *Options) ([]*FlatFeed, error) {
 // 	panic("not implemented.")
 // }
 //
-// func (f *Feed) url() string {
-// 	return "feed/" + f.FeedSlug + "/" + f.UserID + "/"
+// func (f *FlatFeed) url() string {
+// 	return "feed/" + f.FlatFeedSlug + "/" + f.UserID + "/"
 // }

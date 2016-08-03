@@ -1,9 +1,10 @@
 package getstream_test
 
 import (
+	"testing"
+
 	. "github.com/hyperworks/go-getstream"
 	a "github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSign(t *testing.T) {
@@ -15,7 +16,7 @@ func TestSignSlug(t *testing.T) {
 	expected := TestFeedSlug.WithToken(TestToken)
 	actual := SignSlug(TestAPISecret, TestFeedSlug)
 	a.Equal(t, expected, actual)
-	a.Equal(t, TestFeedSignature, actual.Signature())
+	a.Equal(t, TestFlatFeedSignature, actual.Signature())
 }
 
 func TestSignActivity(t *testing.T) {

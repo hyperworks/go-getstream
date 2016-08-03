@@ -1,8 +1,9 @@
 package getstream_test
 
 import (
-	. "github.com/hyperworks/go-getstream"
 	"os"
+
+	. "github.com/hyperworks/go-getstream"
 )
 
 const (
@@ -10,7 +11,7 @@ const (
 	TestTargetFeedToken  = "3ZIhnU1vw524lXGsOd7wb0DkmrU"
 	TestTargetFeedToken2 = "IKjr7WED0O3ROLZGEIFrCSwBo4Y"
 
-	TestFeedSignature        = "userflat14483198-3e43-4a91-a2ed-fc88dcf2fd7b " + TestToken
+	TestFlatFeedSignature    = "userflat14483198-3e43-4a91-a2ed-fc88dcf2fd7b " + TestToken
 	TestTargetFeedSignature  = "userflat72d8ee6c-c27c-49a5-9311-c5e0e67356e5 " + TestTargetFeedToken
 	TestTargetFeedSignature2 = "userflate1f8917c-e6dd-4d06-b6ff-59805d8e2b96 " + TestTargetFeedToken2
 )
