@@ -1,14 +1,12 @@
 package getstream
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
+// FlatFeed is a getstream FlatFeed
+// Use it to for CRUD on FlatFeed Groups
 type FlatFeed struct {
 	Client   *Client
 	FeedSlug string
@@ -16,105 +14,38 @@ type FlatFeed struct {
 	token    string
 }
 
+// Signature is used to sign Requests : "FeedSlugUserID Token"
 func (f *FlatFeed) Signature() string {
 	return f.FeedSlug + f.UserID + " " + f.Token()
 }
 
+// FeedID is the combo if the FeedSlug and UserID : "FeedSlug:UserID"
 func (f *FlatFeed) FeedID() string {
 	return f.FeedSlug + ":" + f.UserID
 }
 
+// SignFeed sets the token on a Feed
 func (f *FlatFeed) SignFeed(signer *Signer) {
 	f.token = signer.generateToken(f.FeedSlug + f.UserID)
 }
 
+// Token returns the token of a Feed
 func (f *FlatFeed) Token() string {
 	return f.token
 }
 
+// GenerateToken returns a new Token for a Feed without setting it to the Feed
 func (f *FlatFeed) GenerateToken(signer *Signer) string {
 	return signer.generateToken(f.FeedSlug + f.UserID)
 }
 
-// get request helper
-func (f *FlatFeed) get(path string, signature string) ([]byte, error) {
-	res, err := f.request("GET", path, signature, nil)
-	return res, err
-}
-
-// post request helper
-func (f *FlatFeed) post(path string, signature string, payload []byte) ([]byte, error) {
-	res, err := f.request("POST", path, signature, payload)
-	return res, err
-}
-
-// delete request helper
-func (f *FlatFeed) del(path string, signature string) error {
-	_, err := f.request("DELETE", path, signature, nil)
-	return err
-}
-
-// request helper
-func (f *FlatFeed) request(method, path string, signature string, payload []byte) ([]byte, error) {
-
-	// create url.URL instance with query params
-	absURL, err := f.Client.absoluteURL(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// create a new http request
-	req, err := http.NewRequest(method, absURL.String(), bytes.NewBuffer(payload))
-	if err != nil {
-		return nil, err
-	}
-
-	// set the Auth headers for the http request
-	req.Header.Set("Content-Type", "application/json")
-	if f.Token() != "" {
-		req.Header.Set("Authorization", signature)
-	}
-
-	// perform the http request
-	resp, err := f.Client.http.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// read the response
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// debug Println
-	//fmt.Println(string(body))
-
-	// handle the response
-	switch {
-	case resp.StatusCode/100 == 2: // SUCCESS
-		if body != nil {
-			return body, nil
-		}
-		return nil, nil
-	default:
-		var respErr []byte
-		err = json.Unmarshal(respErr, err)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(string(respErr))
-	}
-}
-
+// AddActivity is Used to post an Activity to a FlatFeed
 func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, error) {
 
 	input := activity.Input()
 
 	payload, err := json.Marshal(input)
 	if err != nil {
-		fmt.Println("marshal input error")
 		return nil, err
 	}
 
@@ -146,6 +77,7 @@ func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, e
 // 	panic("not yet implemented.")
 // }
 
+// Activities returns a list of Activities for a FlatFeedGroup
 func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, error) {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/"
@@ -164,11 +96,31 @@ func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, erro
 	return output.Output(), err
 }
 
-func (f *FlatFeed) RemoveActivity(id string) error {
+// RemoveActivity removes an Activity from a FlatFeedGroup
+func (f *FlatFeed) RemoveActivity(input *FlatFeedActivity) error {
 
-	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + id + "/"
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + input.ID + "/"
 
-	return f.del(endpoint, f.Signature())
+	return f.del(endpoint, f.Signature(), nil)
+}
+
+// RemoveActivityByForeignID removes an Activity from a FlatFeedGroup by ForeignID
+func (f *FlatFeed) RemoveActivityByForeignID(input *FlatFeedActivity) error {
+
+	if input.ForeignID == "" {
+		return errors.New("no ForeignID")
+	}
+
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + input.ForeignID + "/"
+
+	payload, err := json.Marshal(map[string]string{
+		"foreign_id": "1",
+	})
+	if err != nil {
+		return err
+	}
+
+	return f.del(endpoint, f.Signature(), payload)
 }
 
 func (f *FlatFeed) Follow(feed, id string) error {

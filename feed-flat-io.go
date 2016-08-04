@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type FlatFeedActivity struct {
-	ID      string
-	Actor   string
-	Verb    string
-	Object  string
-	Target  string
-	RawTime string
+	ID        string
+	Actor     string
+	Verb      string
+	Object    string
+	Target    string
+	TimeStamp *time.Time
 
 	ForeignID string
 	Data      json.RawMessage
@@ -28,12 +29,17 @@ func (a FlatFeedActivity) Input() *postFlatFeedInputActivity {
 		Verb:      a.Verb,
 		Object:    a.Object,
 		Target:    a.Target,
-		RawTime:   a.RawTime,
 		ForeignID: a.ForeignID,
 		Data:      a.Data,
 	}
 
 	input.To = []string{}
+
+	if a.TimeStamp == nil {
+		input.RawTime = time.Now().Format("2006-01-02T15:04:05.999999")
+	} else {
+		input.RawTime = a.TimeStamp.Format("2006-01-02T15:04:05.999999")
+	}
 
 	for _, feed := range a.To {
 		to := feed.FeedID()
@@ -78,9 +84,15 @@ func (a postFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 		Verb:      a.Verb,
 		Object:    a.Object,
 		Target:    a.Target,
-		RawTime:   a.RawTime,
 		ForeignID: a.ForeignID,
 		Data:      a.Data,
+	}
+
+	if a.RawTime != "" {
+		timeStamp, err := time.Parse("2006-01-02T15:04:05.999999", a.RawTime)
+		if err == nil {
+			activity.TimeStamp = &timeStamp
+		}
 	}
 
 	for _, slice := range a.To {
@@ -166,9 +178,15 @@ func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 		Verb:      a.Verb,
 		Object:    a.Object,
 		Target:    a.Target,
-		RawTime:   a.RawTime,
 		ForeignID: a.ForeignID,
 		Data:      a.Data,
+	}
+
+	if a.RawTime != "" {
+		timeStamp, err := time.Parse("2006-01-02T15:04:05.999999", a.RawTime)
+		if err == nil {
+			activity.TimeStamp = &timeStamp
+		}
 	}
 
 	for _, to := range a.To {
