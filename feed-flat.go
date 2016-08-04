@@ -84,9 +84,14 @@ func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, e
 // Activities returns a list of Activities for a FlatFeedGroup
 func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, error) {
 
+	payload, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/"
 
-	result, err := f.get(endpoint, f.Signature())
+	result, err := f.get(endpoint, f.Signature(), payload)
 	if err != nil {
 		return nil, err
 	}
@@ -135,18 +140,52 @@ func (f *FlatFeed) RemoveActivityByForeignID(input *FlatFeedActivity) error {
 	return f.del(endpoint, f.Signature(), payload)
 }
 
-func (f *FlatFeed) Follow(feed, id string) error {
-	panic("not implemented.")
+func (f *FlatFeed) Follow(target Feed) error {
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/"
+
+	input := postFlatFeedFollowingInput{
+		Target:            string(target.FeedID()),
+		ActivityCopyLimit: 300,
+	}
+
+	payload, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+
+	_, err = f.post(endpoint, f.Signature(), payload)
+	return err
+
 }
 
-func (f *FlatFeed) Unfollow(feed, id string) error {
-	panic("not implemented.")
+func (f *FlatFeed) Unfollow(target Feed) error {
+
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
+
+	return f.del(endpoint, f.Signature(), nil)
+
 }
 
-// func (f *FlatFeed) Followers(opt *Options) ([]*FlatFeed, error) {
-// 	panic("not implemented.")
-// }
+func (f *FlatFeed) UnfollowKeepingHistory(target Feed) error {
+
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
+
+	payload, err := json.Marshal(map[string]string{
+		"keep_history": "1",
+	})
+	if err != nil {
+		return err
+	}
+
+	return f.del(endpoint, f.Signature(), payload)
+
+}
+
 //
-// func (f *FlatFeed) url() string {
-// 	return "feed/" + f.FlatFeedSlug + "/" + f.UserID + "/"
+// func (f *FlatFeed) Followers() ([]*FlatFeed, error) {
+//
+// 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "followers" + "/"
+//
+// 	res, err := f.get(endpoint, f.Signature(), nil)
+//
 // }

@@ -9,8 +9,8 @@ import (
 )
 
 // get request helper
-func (f *FlatFeed) get(path string, signature string) ([]byte, error) {
-	res, err := f.request("GET", path, signature, nil)
+func (f *FlatFeed) get(path string, signature string, payload []byte) ([]byte, error) {
+	res, err := f.request("GET", path, signature, payload)
 	return res, err
 }
 

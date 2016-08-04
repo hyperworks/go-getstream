@@ -224,3 +224,19 @@ func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 	}
 	return &activity
 }
+
+type getFlatFeedFollowersInput struct {
+	Limit int `json:"limit"`
+	Skip  int `json:"offset"`
+}
+
+type getFlatFeedFollowingInput struct {
+	Limit  int      `json:"limit"`
+	Skip   int      `json:"offset"`
+	Filter []string `json:"filter"`
+}
+
+type postFlatFeedFollowingInput struct {
+	Target            string `json:"target"`
+	ActivityCopyLimit int    `json:"activity_copy_limit"`
+}
