@@ -1,5 +1,8 @@
 package getstream
 
+// FeedID is a typealias of string to create some value safety
+type FeedID string
+
 // Feed is the interface bundling all Feed Types
 // It exposes methods needed for all Types
 type Feed interface {

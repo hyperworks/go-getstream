@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-// FlatFeedActivity is a getstream Activity
-// Use it to post activities to FlatFeeds
-// It is also the response from FlatFeed Fetch and List Requests
-type FlatFeedActivity struct {
+// NotificationFeedActivity is a getstream Activity
+// Use it to post activities to NotificationFeeds
+// It is also the response from NotificationFeed Fetch and List Requests
+type NotificationFeedActivity struct {
 	ID        string
 	Actor     FeedID
 	Verb      string
@@ -25,9 +25,9 @@ type FlatFeedActivity struct {
 	To []Feed
 }
 
-func (a FlatFeedActivity) input() (*postFlatFeedInputActivity, error) {
+func (a NotificationFeedActivity) input() (*postNotificationFeedInputActivity, error) {
 
-	input := postFlatFeedInputActivity{
+	input := postNotificationFeedInputActivity{
 		ID:     a.ID,
 		Actor:  string(a.Actor),
 		Verb:   a.Verb,
@@ -67,7 +67,7 @@ func (a FlatFeedActivity) input() (*postFlatFeedInputActivity, error) {
 	return &input, nil
 }
 
-type postFlatFeedInputActivity struct {
+type postNotificationFeedInputActivity struct {
 	ID        string          `json:"id,omitempty"`
 	Actor     string          `json:"actor"`
 	Verb      string          `json:"verb"`
@@ -79,7 +79,7 @@ type postFlatFeedInputActivity struct {
 	To        []string        `json:"to,omitempty"`
 }
 
-type postFlatFeedOutputActivity struct {
+type postNotificationFeedOutputActivity struct {
 	ID        string          `json:"id,omitempty"`
 	Actor     string          `json:"actor"`
 	Verb      string          `json:"verb"`
@@ -91,13 +91,13 @@ type postFlatFeedOutputActivity struct {
 	To        [][]string      `json:"to,omitempty"`
 }
 
-type postFlatFeedOutputActivities struct {
-	Activities []*postFlatFeedOutputActivity `json:"activities"`
+type postNotificationFeedOutputActivities struct {
+	Activities []*postNotificationFeedOutputActivity `json:"activities"`
 }
 
-func (a postFlatFeedOutputActivity) Activity() *FlatFeedActivity {
+func (a postNotificationFeedOutputActivity) Activity() *NotificationFeedActivity {
 
-	activity := FlatFeedActivity{
+	activity := NotificationFeedActivity{
 		ID:        a.ID,
 		Actor:     FeedID(a.Actor),
 		Verb:      a.Verb,
@@ -115,13 +115,13 @@ func (a postFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 	}
 
 	for _, slice := range a.To {
-		parseFlatFeedToParams(slice, &activity)
+		parseNotificationFeedToParams(slice, &activity)
 	}
 	return &activity
 }
 
-// GetFlatFeedInput is used to Get a list of Activities from a FlatFeed
-type GetFlatFeedInput struct {
+// GetNotificationFeedInput is used to Get a list of Activities from a NotificationFeed
+type GetNotificationFeedInput struct {
 	Limit  int `json:"limit,omitempty"`
 	Offset int `json:"offset,omitempty"`
 
@@ -133,22 +133,22 @@ type GetFlatFeedInput struct {
 	Ranking string `json:"ranking,omitempty"`
 }
 
-// GetFlatFeedOutput is the response from a FlatFeed Activities Get Request
-type GetFlatFeedOutput struct {
+// GetNotificationFeedOutput is the response from a NotificationFeed Activities Get Request
+type GetNotificationFeedOutput struct {
 	Duration   string
 	Next       string
-	Activities []*FlatFeedActivity
+	Activities []*NotificationFeedActivity
 }
 
-type getFlatFeedOutput struct {
-	Duration   string                       `json:"duration"`
-	Next       string                       `json:"next"`
-	Activities []*getFlatFeedOutputActivity `json:"results"`
+type getNotificationFeedOutput struct {
+	Duration   string                               `json:"duration"`
+	Next       string                               `json:"next"`
+	Activities []*getNotificationFeedOutputActivity `json:"results"`
 }
 
-func (a getFlatFeedOutput) Output() *GetFlatFeedOutput {
+func (a getNotificationFeedOutput) Output() *GetNotificationFeedOutput {
 
-	output := GetFlatFeedOutput{
+	output := GetNotificationFeedOutput{
 		Duration: a.Duration,
 		Next:     a.Next,
 	}
@@ -160,7 +160,7 @@ func (a getFlatFeedOutput) Output() *GetFlatFeedOutput {
 	return &output
 }
 
-type getFlatFeedOutputActivity struct {
+type getNotificationFeedOutputActivity struct {
 	ID        string          `json:"id,omitempty"`
 	Actor     string          `json:"actor"`
 	Verb      string          `json:"verb"`
@@ -172,9 +172,9 @@ type getFlatFeedOutputActivity struct {
 	Data      json.RawMessage `json:"data,omitempty"`
 }
 
-func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
+func (a getNotificationFeedOutputActivity) Activity() *NotificationFeedActivity {
 
-	activity := FlatFeedActivity{
+	activity := NotificationFeedActivity{
 		ID:        a.ID,
 		Actor:     FeedID(a.Actor),
 		Verb:      a.Verb,
@@ -191,12 +191,12 @@ func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 		}
 	}
 
-	parseFlatFeedToParams(a.To, &activity)
+	parseNotificationFeedToParams(a.To, &activity)
 
 	return &activity
 }
 
-func parseFlatFeedToParams(to []string, activity *FlatFeedActivity) {
+func parseNotificationFeedToParams(to []string, activity *NotificationFeedActivity) {
 
 	for _, to := range to {
 
@@ -221,24 +221,24 @@ func parseFlatFeedToParams(to []string, activity *FlatFeedActivity) {
 
 }
 
-type getFlatFeedFollowersInput struct {
+type getNotificationFeedFollowersInput struct {
 	Limit int `json:"limit"`
 	Skip  int `json:"offset"`
 }
 
-type getFlatFeedFollowersOutput struct {
-	Duration string                              `json:"duration"`
-	Results  []*getFlatFeedFollowersOutputResult `json:"results"`
+type getNotificationFeedFollowersOutput struct {
+	Duration string                                      `json:"duration"`
+	Results  []*getNotificationFeedFollowersOutputResult `json:"results"`
 }
 
-type getFlatFeedFollowersOutputResult struct {
+type getNotificationFeedFollowersOutputResult struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	FeedID    string `json:"feed_id"`
 	TargetID  string `json:"target_id"`
 }
 
-type postFlatFeedFollowingInput struct {
+type postNotificationFeedFollowingInput struct {
 	Target            string `json:"target"`
 	ActivityCopyLimit int    `json:"activity_copy_limit"`
 }

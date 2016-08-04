@@ -8,25 +8,25 @@ import (
 )
 
 // get request helper
-func (f *FlatFeed) get(path string, signature string, payload []byte) ([]byte, error) {
+func (f *NotificationFeed) get(path string, signature string, payload []byte) ([]byte, error) {
 	res, err := f.request("GET", path, signature, payload)
 	return res, err
 }
 
 // post request helper
-func (f *FlatFeed) post(path string, signature string, payload []byte) ([]byte, error) {
+func (f *NotificationFeed) post(path string, signature string, payload []byte) ([]byte, error) {
 	res, err := f.request("POST", path, signature, payload)
 	return res, err
 }
 
 // delete request helper
-func (f *FlatFeed) del(path string, signature string, payload []byte) error {
+func (f *NotificationFeed) del(path string, signature string, payload []byte) error {
 	_, err := f.request("DELETE", path, signature, payload)
 	return err
 }
 
 // request helper
-func (f *FlatFeed) request(method, path string, signature string, payload []byte) ([]byte, error) {
+func (f *NotificationFeed) request(method, path string, signature string, payload []byte) ([]byte, error) {
 
 	// create url.URL instance with query params
 	absURL, err := f.Client.absoluteURL(path)
