@@ -241,12 +241,6 @@ type getFlatFeedFollowersOutputResult struct {
 	TargetID  string `json:"target_id"`
 }
 
-type getFlatFeedFollowingInput struct {
-	Limit  int      `json:"limit"`
-	Skip   int      `json:"offset"`
-	Filter []string `json:"filter"`
-}
-
 type postFlatFeedFollowingInput struct {
 	Target            string `json:"target"`
 	ActivityCopyLimit int    `json:"activity_copy_limit"`

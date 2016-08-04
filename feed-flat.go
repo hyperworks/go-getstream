@@ -261,3 +261,48 @@ func (f *FlatFeed) FollowersWithLimitAndSkip(limit int, skip int) ([]*GeneralFee
 	return outputFeeds, err
 
 }
+
+// FollowingWithLimitAndSkip returns a list of GeneralFeed followed by the current FlatFeed
+func (f *FlatFeed) FollowingWithLimitAndSkip(limit int, skip int) ([]*GeneralFeed, error) {
+
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/"
+
+	payload, err := json.Marshal(&getFlatFeedFollowersInput{
+		Limit: limit,
+		Skip:  skip,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	resultBytes, err := f.get(endpoint, f.Signature(), payload)
+
+	output := &getFlatFeedFollowersOutput{}
+	err = json.Unmarshal(resultBytes, output)
+	if err != nil {
+		return nil, err
+	}
+
+	var outputFeeds []*GeneralFeed
+	for _, result := range output.Results {
+
+		feed := GeneralFeed{}
+
+		match, err := regexp.MatchString(`^.*?:.*?$`, result.FeedID)
+		if err != nil {
+			continue
+		}
+
+		if match {
+			firstSplit := strings.Split(result.TargetID, ":")
+
+			feed.FeedSlug = firstSplit[0]
+			feed.UserID = firstSplit[1]
+		}
+
+		outputFeeds = append(outputFeeds, &feed)
+	}
+
+	return outputFeeds, err
+
+}
