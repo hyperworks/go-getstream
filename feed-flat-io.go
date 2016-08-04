@@ -2,6 +2,7 @@ package getstream
 
 import (
 	"encoding/json"
+	"errors"
 	"regexp"
 	"strings"
 	"time"
@@ -21,17 +22,26 @@ type FlatFeedActivity struct {
 	To []Feed
 }
 
-func (a FlatFeedActivity) Input() *postFlatFeedInputActivity {
+func (a FlatFeedActivity) Input() (*postFlatFeedInputActivity, error) {
 
 	input := postFlatFeedInputActivity{
-		ID:        a.ID,
-		Actor:     a.Actor,
-		Verb:      a.Verb,
-		Object:    a.Object,
-		Target:    a.Target,
-		ForeignID: a.ForeignID,
-		Data:      a.Data,
+		ID:     a.ID,
+		Actor:  a.Actor,
+		Verb:   a.Verb,
+		Object: a.Object,
+		Target: a.Target,
+		Data:   a.Data,
 	}
+
+	r, err := regexp.Compile("^[a-z0-9]{8}-[a-z0-9]{4}-[1-5][a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{12}$")
+	if err != nil {
+		return nil, err
+	}
+	if !r.MatchString(a.ForeignID) {
+		return nil, errors.New("invalid ForeignID")
+	}
+
+	input.ForeignID = a.ForeignID
 
 	input.To = []string{}
 
@@ -49,7 +59,7 @@ func (a FlatFeedActivity) Input() *postFlatFeedInputActivity {
 		input.To = append(input.To, to)
 	}
 
-	return &input
+	return &input, nil
 }
 
 type postFlatFeedInputActivity struct {

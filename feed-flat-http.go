@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -60,8 +59,6 @@ func (f *FlatFeed) request(method, path string, signature string, payload []byte
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(string(body))
 
 	// handle the response
 	switch {

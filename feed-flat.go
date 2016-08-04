@@ -3,6 +3,7 @@ package getstream
 import (
 	"encoding/json"
 	"errors"
+	"regexp"
 )
 
 // FlatFeed is a getstream FlatFeed
@@ -42,7 +43,10 @@ func (f *FlatFeed) GenerateToken(signer *Signer) string {
 // AddActivity is Used to post an Activity to a FlatFeed
 func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, error) {
 
-	input := activity.Input()
+	input, err := activity.Input()
+	if err != nil {
+		return nil, err
+	}
 
 	payload, err := json.Marshal(input)
 	if err != nil {
@@ -106,6 +110,14 @@ func (f *FlatFeed) RemoveActivity(input *FlatFeedActivity) error {
 
 // RemoveActivityByForeignID removes an Activity from a FlatFeedGroup by ForeignID
 func (f *FlatFeed) RemoveActivityByForeignID(input *FlatFeedActivity) error {
+
+	r, err := regexp.Compile("^[a-z0-9]{8}-[a-z0-9]{4}-[1-5][a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{12}$")
+	if err != nil {
+		return err
+	}
+	if !r.MatchString(input.ForeignID) {
+		return errors.New("invalid ForeignID")
+	}
 
 	if input.ForeignID == "" {
 		return errors.New("no ForeignID")
