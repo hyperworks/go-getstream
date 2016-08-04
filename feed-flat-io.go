@@ -229,6 +229,18 @@ type getFlatFeedFollowersInput struct {
 	Skip  int `json:"offset"`
 }
 
+type getFlatFeedFollowersOutput struct {
+	Duration string                              `json:"duration"`
+	Results  []*getFlatFeedFollowersOutputResult `json:"results"`
+}
+
+type getFlatFeedFollowersOutputResult struct {
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	FeedID    string `json:"feed_id"`
+	TargetID  string `json:"target_id"`
+}
+
 type getFlatFeedFollowingInput struct {
 	Limit  int      `json:"limit"`
 	Skip   int      `json:"offset"`
