@@ -1,125 +1,117 @@
 package getstream
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
+	"time"
 )
 
+// Client is used to connect to getstream.io
 type Client struct {
 	http    *http.Client
 	baseURL *url.URL // https://api.getstream.io/api/
 
-	key      string
-	secret   string
-	appID    string
-	location string // https://location-api.getstream.io/api/
+	Key      string
+	Secret   string
+	AppID    string
+	Location string // https://location-api.getstream.io/api/
+
+	signer *Signer
 }
 
-func Connect(key, secret, appID, location string) *Client {
+// New returns a getstream client.
+// Params :
+// - api key
+// - api secret
+// - appID
+// - region
+func New(key, secret, appID, location string) (*Client, error) {
 	baseURLStr := "https://api.getstream.io/api/v1.0/"
 	if location != "" {
 		baseURLStr = "https://" + location + "-api.getstream.io/api/v1.0/"
 	}
 
-	baseURL, e := url.Parse(baseURLStr)
-	if e != nil {
-		panic(e) // failfast, url shouldn't be invalid anyway.
+	baseURL, err := url.Parse(baseURLStr)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Client{
-		http:    &http.Client{},
+		http: &http.Client{
+			Timeout: 3 * time.Second,
+		},
 		baseURL: baseURL,
 
-		key:      key,
-		secret:   secret,
-		appID:    appID,
-		location: location,
-	}
+		Key:      key,
+		Secret:   secret,
+		AppID:    appID,
+		Location: location,
+
+		signer: &Signer{
+			Secret: secret,
+		},
+	}, nil
 }
 
+// FlatFeed returns a getstream feed
+// Slug is the FlatFeedGroup name
+// id is the Specific FlatFeed inside a FlatFeedGroup
+// to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
+func (c *Client) FlatFeed(feedSlug string, userID string) (*FlatFeed, error) {
+
+	r, err := regexp.Compile(`^\w+$`)
+	if err != nil {
+		return nil, err
+	}
+	if !r.MatchString(feedSlug) || !r.MatchString(userID) {
+		return nil, errors.New("invalid ForeignID")
+	}
+
+	feed := &FlatFeed{
+		Client:   c,
+		FeedSlug: feedSlug,
+		UserID:   userID,
+	}
+
+	feed.SignFeed(c.signer)
+	return feed, nil
+}
+
+// NotificationFeed returns a getstream feed
+// Slug is the NotificationFeedGroup name
+// id is the Specific NotificationFeed inside a NotificationFeedGroup
+// to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
+func (c *Client) NotificationFeed(feedSlug string, userID string) (*NotificationFeed, error) {
+
+	r, err := regexp.Compile(`^\w+$`)
+	if err != nil {
+		return nil, err
+	}
+	if !r.MatchString(feedSlug) || !r.MatchString(userID) {
+		return nil, errors.New("invalid ForeignID")
+	}
+
+	feed := &NotificationFeed{
+		Client:   c,
+		FeedSlug: feedSlug,
+		UserID:   userID,
+	}
+
+	feed.SignFeed(c.signer)
+	return feed, nil
+}
+
+// BaseURL returns the getstream URL for your location
 func (c *Client) BaseURL() *url.URL { return c.baseURL }
 
-func (c *Client) Feed(slug, id string) *Feed {
-	return &Feed{
-		Client: c,
-		slug:   SignSlug(c.secret, Slug{slug, id, ""}),
-	}
-}
+// absoluteUrl create a url.URL instance and sets query params (bad!!!)
+func (c *Client) absoluteURL(path string) (*url.URL, error) {
 
-func (c *Client) get(result interface{}, path string, slug Slug) error {
-	return c.request(result, "GET", path, slug, nil)
-}
-
-func (c *Client) post(result interface{}, path string, slug Slug, payload interface{}) error {
-	return c.request(result, "POST", path, slug, payload)
-}
-
-func (c *Client) del(path string, slug Slug) error {
-	return c.request(nil, "DELETE", path, slug, nil)
-}
-
-func (c *Client) request(result interface{}, method, path string, slug Slug, payload interface{}) error {
-	absUrl, e := c.absoluteUrl(path)
-	if e != nil {
-		return e
-	}
-
-	buffer := []byte{}
-	if payload != nil {
-		if buffer, e = json.Marshal(payload); e != nil {
-			return e
-		}
-	}
-
-	req, e := http.NewRequest(method, absUrl.String(), bytes.NewBuffer(buffer))
-	if e != nil {
-		return e
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	if slug.Token != "" {
-		req.Header.Set("Authorization", slug.Signature())
-	}
-
-	resp, e := c.http.Do(req)
-	if e != nil {
-		return e
-	}
-	defer resp.Body.Close()
-
-	buffer, e = ioutil.ReadAll(resp.Body)
-	if e != nil {
-		return e
-	}
-
-	switch {
-	case 200 <= resp.StatusCode && resp.StatusCode < 300: // SUCCESS
-		if result != nil {
-			if e = json.Unmarshal(buffer, result); e != nil {
-				return e
-			}
-		}
-
-	default:
-		err := &Error{}
-		if e = json.Unmarshal(buffer, err); e != nil {
-			panic(e)
-			return errors.New(string(buffer))
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-func (c *Client) absoluteUrl(path string) (result *url.URL, e error) {
-	if result, e = url.Parse(path); e != nil {
-		return nil, e
+	result, err := url.Parse(path)
+	if err != nil {
+		return nil, err
 	}
 
 	// DEBUG: Use this line to send stuff to a proxy instead.
@@ -127,11 +119,11 @@ func (c *Client) absoluteUrl(path string) (result *url.URL, e error) {
 	result = c.baseURL.ResolveReference(result)
 
 	qs := result.Query()
-	qs.Set("api_key", c.key)
-	if c.location == "" {
+	qs.Set("api_key", c.Key)
+	if c.Location == "" {
 		qs.Set("location", "unspecified")
 	} else {
-		qs.Set("location", c.location)
+		qs.Set("location", c.Location)
 	}
 	result.RawQuery = qs.Encode()
 

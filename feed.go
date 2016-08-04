@@ -1,54 +1,48 @@
 package getstream
 
-import ()
+// FeedID is a typealias of string to create some value safety
+type FeedID string
 
-type Feed struct {
-	*Client
-	slug Slug
+// Feed is the interface bundling all Feed Types
+// It exposes methods needed for all Types
+type Feed interface {
+	Signature() string
+	FeedID() FeedID
+	Token() string
+	SignFeed(signer *Signer)
+	GenerateToken(signer *Signer) string
 }
 
-func (f *Feed) Slug() Slug { return f.slug }
-
-func (f *Feed) AddActivity(activity *Activity) (*Activity, error) {
-	activity = SignActivity(f.secret, activity)
-
-	result := &Activity{}
-	e := f.post(result, f.url(), f.slug, activity)
-	return result, e
+// GeneralFeed is a container for Feeds returned from request
+// The specific Type will be unknown so no Actions are associated with a GeneralFeed
+type GeneralFeed struct {
+	Client   *Client
+	FeedSlug string
+	UserID   string
+	token    string
 }
 
-func (f *Feed) AddActivities(activities []*Activity) error {
-	signeds := make([]*Activity, len(activities), len(activities))
-	for i, activity := range activities {
-		signeds[i] = SignActivity(f.secret, activity)
-	}
-
-	// TODO: A result type to recieve the listing result.
-	panic("not yet implemented.")
+// Signature is used to sign Requests : "FeedSlugUserID Token"
+func (f *GeneralFeed) Signature() string {
+	return f.FeedSlug + f.UserID + " " + f.Token()
 }
 
-func (f *Feed) Activities(opt *Options) ([]*Activity, error) {
-	result := ActivitiesResult{}
-	e := f.get(&result, f.url(), f.slug)
-	return result.Results, e
+// FeedID is the combo if the FeedSlug and UserID : "FeedSlug:UserID"
+func (f *GeneralFeed) FeedID() FeedID {
+	return FeedID(f.FeedSlug + ":" + f.UserID)
 }
 
-func (f *Feed) RemoveActivity(id string) error {
-	return f.del(f.url()+id+"/", f.slug)
+// SignFeed sets the token on a Feed
+func (f *GeneralFeed) SignFeed(signer *Signer) {
+	f.token = signer.generateToken(f.FeedSlug + f.UserID)
 }
 
-func (f *Feed) Follow(feed, id string) error {
-	panic("not implemented.")
+// Token returns the token of a Feed
+func (f *GeneralFeed) Token() string {
+	return f.token
 }
 
-func (f *Feed) Unfollow(feed, id string) error {
-	panic("not implemented.")
-}
-
-func (f *Feed) Followers(opt *Options) ([]*Feed, error) {
-	panic("not implemented.")
-}
-
-func (f *Feed) url() string {
-	return "feed/" + f.slug.Slug + "/" + f.slug.ID + "/"
+// GenerateToken returns a new Token for a Feed without setting it to the Feed
+func (f *GeneralFeed) GenerateToken(signer *Signer) string {
+	return signer.generateToken(f.FeedSlug + f.UserID)
 }

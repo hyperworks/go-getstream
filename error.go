@@ -4,19 +4,19 @@ import (
 	"time"
 )
 
-/*{"code": 5, "detail": "Please use signedto instead of signedTo for your field name", "
-duration": "36ms", "exception": "CustomFieldException", "status_code": 400}           */
+// Error is a getstream error
 type Error struct {
-	Code       int
+	Code       int `json:"code"`
 	StatusCode int `json:"status_code"`
 
-	Detail      string
+	Detail      string `json:"detail"`
 	RawDuration string `json:"duration"`
-	Exception   string
+	Exception   string `json:"exception"`
 }
 
 var _ error = &Error{}
 
+// Duration is the time it took for the request to be handled
 func (err *Error) Duration() time.Duration {
 	result, e := time.ParseDuration(err.RawDuration)
 	if e != nil {
