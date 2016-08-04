@@ -8,12 +8,15 @@ import (
 	"time"
 )
 
+// FeedID is a typealias of string to create some value safety
+type FeedID string
+
 type FlatFeedActivity struct {
 	ID        string
-	Actor     string
+	Actor     FeedID
 	Verb      string
-	Object    string
-	Target    string
+	Object    FeedID
+	Target    FeedID
 	TimeStamp *time.Time
 
 	ForeignID string
@@ -26,10 +29,10 @@ func (a FlatFeedActivity) Input() (*postFlatFeedInputActivity, error) {
 
 	input := postFlatFeedInputActivity{
 		ID:     a.ID,
-		Actor:  a.Actor,
+		Actor:  string(a.Actor),
 		Verb:   a.Verb,
-		Object: a.Object,
-		Target: a.Target,
+		Object: string(a.Object),
+		Target: string(a.Target),
 		Data:   a.Data,
 	}
 
@@ -52,7 +55,7 @@ func (a FlatFeedActivity) Input() (*postFlatFeedInputActivity, error) {
 	}
 
 	for _, feed := range a.To {
-		to := feed.FeedID()
+		to := string(feed.FeedID())
 		if feed.Token() != "" {
 			to += " " + feed.Token()
 		}
@@ -90,10 +93,10 @@ func (a postFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 
 	activity := FlatFeedActivity{
 		ID:        a.ID,
-		Actor:     a.Actor,
+		Actor:     FeedID(a.Actor),
 		Verb:      a.Verb,
-		Object:    a.Object,
-		Target:    a.Target,
+		Object:    FeedID(a.Object),
+		Target:    FeedID(a.Target),
 		ForeignID: a.ForeignID,
 		Data:      a.Data,
 	}
@@ -184,10 +187,10 @@ func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 
 	activity := FlatFeedActivity{
 		ID:        a.ID,
-		Actor:     a.Actor,
+		Actor:     FeedID(a.Actor),
 		Verb:      a.Verb,
-		Object:    a.Object,
-		Target:    a.Target,
+		Object:    FeedID(a.Object),
+		Target:    FeedID(a.Target),
 		ForeignID: a.ForeignID,
 		Data:      a.Data,
 	}

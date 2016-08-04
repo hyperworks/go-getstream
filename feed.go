@@ -2,7 +2,7 @@ package getstream
 
 type Feed interface {
 	Signature() string
-	FeedID() string
+	FeedID() FeedID
 	Token() string
 	SignFeed(signer *Signer)
 	GenerateToken(signer *Signer) string
@@ -19,8 +19,8 @@ func (f *GeneralFeed) Signature() string {
 	return f.FeedSlug + f.UserID + " " + f.Token()
 }
 
-func (f *GeneralFeed) FeedID() string {
-	return f.FeedSlug + ":" + f.UserID
+func (f *GeneralFeed) FeedID() FeedID {
+	return FeedID(f.FeedSlug + ":" + f.UserID)
 }
 
 func (f *GeneralFeed) SignFeed(signer *Signer) {

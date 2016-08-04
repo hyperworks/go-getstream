@@ -3,7 +3,7 @@ package getstream
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -60,6 +60,8 @@ func (f *FlatFeed) request(method, path string, signature string, payload []byte
 		return nil, err
 	}
 
+	fmt.Println(string(body))
+
 	// handle the response
 	switch {
 	case resp.StatusCode/100 == 2: // SUCCESS
@@ -68,11 +70,11 @@ func (f *FlatFeed) request(method, path string, signature string, payload []byte
 		}
 		return nil, nil
 	default:
-		var respErr []byte
-		err = json.Unmarshal(respErr, err)
+		var respErr Error
+		err = json.Unmarshal(body, &respErr)
 		if err != nil {
 			return nil, err
 		}
-		return nil, errors.New(string(respErr))
+		return nil, &respErr
 	}
 }

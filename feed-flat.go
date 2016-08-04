@@ -21,8 +21,8 @@ func (f *FlatFeed) Signature() string {
 }
 
 // FeedID is the combo if the FeedSlug and UserID : "FeedSlug:UserID"
-func (f *FlatFeed) FeedID() string {
-	return f.FeedSlug + ":" + f.UserID
+func (f *FlatFeed) FeedID() FeedID {
+	return FeedID(f.FeedSlug + ":" + f.UserID)
 }
 
 // SignFeed sets the token on a Feed

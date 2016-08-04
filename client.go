@@ -1,8 +1,11 @@
 package getstream
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
+	"regexp"
+	"time"
 )
 
 // Client is used to connect to getstream.io
@@ -36,7 +39,9 @@ func New(key, secret, appID, location string) (*Client, error) {
 	}
 
 	return &Client{
-		http:    &http.Client{},
+		http: &http.Client{
+			Timeout: 3 * time.Second,
+		},
 		baseURL: baseURL,
 
 		Key:      key,
@@ -54,7 +59,16 @@ func New(key, secret, appID, location string) (*Client, error) {
 // Slug is the FlatFeedGroup name
 // id is the Specific FlatFeed inside a FlatFeedGroup
 // to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
-func (c *Client) FlatFeed(feedSlug string, userID string) *FlatFeed {
+func (c *Client) FlatFeed(feedSlug string, userID string) (*FlatFeed, error) {
+
+	r, err := regexp.Compile(`^\w+$`)
+	if err != nil {
+		return nil, err
+	}
+	if !r.MatchString(feedSlug) || !r.MatchString(userID) {
+		return nil, errors.New("invalid ForeignID")
+	}
+
 	feed := &FlatFeed{
 		Client:   c,
 		FeedSlug: feedSlug,
@@ -62,7 +76,7 @@ func (c *Client) FlatFeed(feedSlug string, userID string) *FlatFeed {
 	}
 
 	feed.SignFeed(c.signer)
-	return feed
+	return feed, nil
 }
 
 // BaseURL returns the getstream URL for your location
