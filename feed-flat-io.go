@@ -11,6 +11,9 @@ import (
 // FeedID is a typealias of string to create some value safety
 type FeedID string
 
+// FlatFeedActivity is a getstream Activity
+// Use it to post activities to FlatFeeds
+// It is also the response from FlatFeed Fetch and List Requests
 type FlatFeedActivity struct {
 	ID        string
 	Actor     FeedID
@@ -25,7 +28,7 @@ type FlatFeedActivity struct {
 	To []Feed
 }
 
-func (a FlatFeedActivity) Input() (*postFlatFeedInputActivity, error) {
+func (a FlatFeedActivity) input() (*postFlatFeedInputActivity, error) {
 
 	input := postFlatFeedInputActivity{
 		ID:     a.ID,
@@ -109,30 +112,12 @@ func (a postFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 	}
 
 	for _, slice := range a.To {
-		for _, to := range slice {
-
-			feed := GeneralFeed{}
-
-			match, err := regexp.MatchString(`^.*?:.*? .*?$`, to)
-			if err != nil {
-				continue
-			}
-
-			if match {
-				firstSplit := strings.Split(to, ":")
-				secondSplit := strings.Split(firstSplit[1], " ")
-
-				feed.FeedSlug = firstSplit[0]
-				feed.UserID = secondSplit[0]
-				feed.token = secondSplit[1]
-			}
-
-			activity.To = append(activity.To, &feed)
-		}
+		parseFeedToParams(slice, &activity)
 	}
 	return &activity
 }
 
+// GetFlatFeedInput is used to Get a list of Activities from a FlatFeed
 type GetFlatFeedInput struct {
 	Limit  int `json:"limit,omitempty"`
 	Offset int `json:"offset,omitempty"`
@@ -145,6 +130,7 @@ type GetFlatFeedInput struct {
 	Ranking string `json:"ranking,omitempty"`
 }
 
+// GetFlatFeedOutput is the response from a FlatFeed Activities Get Request
 type GetFlatFeedOutput struct {
 	Duration   string
 	Next       string
@@ -202,7 +188,14 @@ func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 		}
 	}
 
-	for _, to := range a.To {
+	parseFeedToParams(a.To, &activity)
+
+	return &activity
+}
+
+func parseFeedToParams(to []string, activity *FlatFeedActivity) {
+
+	for _, to := range to {
 
 		feed := GeneralFeed{}
 
@@ -222,7 +215,7 @@ func (a getFlatFeedOutputActivity) Activity() *FlatFeedActivity {
 
 		activity.To = append(activity.To, &feed)
 	}
-	return &activity
+
 }
 
 type getFlatFeedFollowersInput struct {

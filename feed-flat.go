@@ -43,7 +43,7 @@ func (f *FlatFeed) GenerateToken(signer *Signer) string {
 // AddActivity is Used to post an Activity to a FlatFeed
 func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, error) {
 
-	input, err := activity.Input()
+	input, err := activity.input()
 	if err != nil {
 		return nil, err
 	}
@@ -140,12 +140,14 @@ func (f *FlatFeed) RemoveActivityByForeignID(input *FlatFeedActivity) error {
 	return f.del(endpoint, f.Signature(), payload)
 }
 
-func (f *FlatFeed) Follow(target Feed) error {
+// FollowFeedWithCopyLimit sets a Feed to follow another target Feed
+// CopyLimit is the maximum number of Activities to Copy from History
+func (f *FlatFeed) FollowFeedWithCopyLimit(target Feed, copyLimit int) error {
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/"
 
 	input := postFlatFeedFollowingInput{
 		Target:            string(target.FeedID()),
-		ActivityCopyLimit: 300,
+		ActivityCopyLimit: copyLimit,
 	}
 
 	payload, err := json.Marshal(input)
@@ -158,6 +160,7 @@ func (f *FlatFeed) Follow(target Feed) error {
 
 }
 
+// Unfollow is used to Unfollow a target Feed
 func (f *FlatFeed) Unfollow(target Feed) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
@@ -166,6 +169,8 @@ func (f *FlatFeed) Unfollow(target Feed) error {
 
 }
 
+// UnfollowKeepingHistory is used to Unfollow a target Feed while keeping the History
+// this means that Activities already visibile will remain
 func (f *FlatFeed) UnfollowKeepingHistory(target Feed) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
