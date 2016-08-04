@@ -79,6 +79,30 @@ func (c *Client) FlatFeed(feedSlug string, userID string) (*FlatFeed, error) {
 	return feed, nil
 }
 
+// NotificationFeed returns a getstream feed
+// Slug is the NotificationFeedGroup name
+// id is the Specific NotificationFeed inside a NotificationFeedGroup
+// to get the feed for Bob you would pass something like "user" as slug and "bob" as the id
+func (c *Client) NotificationFeed(feedSlug string, userID string) (*NotificationFeed, error) {
+
+	r, err := regexp.Compile(`^\w+$`)
+	if err != nil {
+		return nil, err
+	}
+	if !r.MatchString(feedSlug) || !r.MatchString(userID) {
+		return nil, errors.New("invalid ForeignID")
+	}
+
+	feed := &NotificationFeed{
+		Client:   c,
+		FeedSlug: feedSlug,
+		UserID:   userID,
+	}
+
+	feed.SignFeed(c.signer)
+	return feed, nil
+}
+
 // BaseURL returns the getstream URL for your location
 func (c *Client) BaseURL() *url.URL { return c.baseURL }
 

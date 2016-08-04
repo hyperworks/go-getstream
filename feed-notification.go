@@ -173,7 +173,7 @@ func (f *NotificationFeed) RemoveActivityByForeignID(input *NotificationFeedActi
 
 // FollowFeedWithCopyLimit sets a Feed to follow another target Feed
 // CopyLimit is the maximum number of Activities to Copy from History
-func (f *NotificationFeed) FollowFeedWithCopyLimit(target Feed, copyLimit int) error {
+func (f *NotificationFeed) FollowFeedWithCopyLimit(target *FlatFeed, copyLimit int) error {
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/"
 
 	input := postNotificationFeedFollowingInput{
@@ -192,7 +192,7 @@ func (f *NotificationFeed) FollowFeedWithCopyLimit(target Feed, copyLimit int) e
 }
 
 // Unfollow is used to Unfollow a target Feed
-func (f *NotificationFeed) Unfollow(target Feed) error {
+func (f *NotificationFeed) Unfollow(target *FlatFeed) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
 
@@ -202,7 +202,7 @@ func (f *NotificationFeed) Unfollow(target Feed) error {
 
 // UnfollowKeepingHistory is used to Unfollow a target Feed while keeping the History
 // this means that Activities already visibile will remain
-func (f *NotificationFeed) UnfollowKeepingHistory(target Feed) error {
+func (f *NotificationFeed) UnfollowKeepingHistory(target *FlatFeed) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
 
@@ -250,51 +250,6 @@ func (f *NotificationFeed) FollowersWithLimitAndSkip(limit int, skip int) ([]*Ge
 
 		if match {
 			firstSplit := strings.Split(result.FeedID, ":")
-
-			feed.FeedSlug = firstSplit[0]
-			feed.UserID = firstSplit[1]
-		}
-
-		outputFeeds = append(outputFeeds, &feed)
-	}
-
-	return outputFeeds, err
-
-}
-
-// FollowingWithLimitAndSkip returns a list of GeneralFeed followed by the current NotificationFeed
-func (f *NotificationFeed) FollowingWithLimitAndSkip(limit int, skip int) ([]*GeneralFeed, error) {
-
-	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/"
-
-	payload, err := json.Marshal(&getNotificationFeedFollowersInput{
-		Limit: limit,
-		Skip:  skip,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	resultBytes, err := f.get(endpoint, f.Signature(), payload)
-
-	output := &getNotificationFeedFollowersOutput{}
-	err = json.Unmarshal(resultBytes, output)
-	if err != nil {
-		return nil, err
-	}
-
-	var outputFeeds []*GeneralFeed
-	for _, result := range output.Results {
-
-		feed := GeneralFeed{}
-
-		match, err := regexp.MatchString(`^.*?:.*?$`, result.FeedID)
-		if err != nil {
-			continue
-		}
-
-		if match {
-			firstSplit := strings.Split(result.TargetID, ":")
 
 			feed.FeedSlug = firstSplit[0]
 			feed.UserID = firstSplit[1]

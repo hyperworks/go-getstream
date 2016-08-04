@@ -3,6 +3,7 @@ package getstream
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -58,6 +59,8 @@ func (f *NotificationFeed) request(method, path string, signature string, payloa
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(string(body))
 
 	// handle the response
 	switch {

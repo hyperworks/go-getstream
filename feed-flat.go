@@ -173,7 +173,7 @@ func (f *FlatFeed) RemoveActivityByForeignID(input *FlatFeedActivity) error {
 
 // FollowFeedWithCopyLimit sets a Feed to follow another target Feed
 // CopyLimit is the maximum number of Activities to Copy from History
-func (f *FlatFeed) FollowFeedWithCopyLimit(target Feed, copyLimit int) error {
+func (f *FlatFeed) FollowFeedWithCopyLimit(target *FlatFeed, copyLimit int) error {
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/"
 
 	input := postFlatFeedFollowingInput{
@@ -192,7 +192,7 @@ func (f *FlatFeed) FollowFeedWithCopyLimit(target Feed, copyLimit int) error {
 }
 
 // Unfollow is used to Unfollow a target Feed
-func (f *FlatFeed) Unfollow(target Feed) error {
+func (f *FlatFeed) Unfollow(target *FlatFeed) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
 
@@ -202,7 +202,7 @@ func (f *FlatFeed) Unfollow(target Feed) error {
 
 // UnfollowKeepingHistory is used to Unfollow a target Feed while keeping the History
 // this means that Activities already visibile will remain
-func (f *FlatFeed) UnfollowKeepingHistory(target Feed) error {
+func (f *FlatFeed) UnfollowKeepingHistory(target *FlatFeed) error {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/" + "following" + "/" + string(target.FeedID()) + "/"
 
