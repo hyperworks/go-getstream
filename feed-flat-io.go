@@ -39,15 +39,17 @@ func (a FlatFeedActivity) input() (*postFlatFeedInputActivity, error) {
 		Data:   a.Data,
 	}
 
-	r, err := regexp.Compile("^[a-z0-9]{8}-[a-z0-9]{4}-[1-5][a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{12}$")
-	if err != nil {
-		return nil, err
-	}
-	if !r.MatchString(a.ForeignID) {
-		return nil, errors.New("invalid ForeignID")
-	}
+	if a.ForeignID != "" {
+		r, err := regexp.Compile("^[a-z0-9]{8}-[a-z0-9]{4}-[1-5][a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{12}$")
+		if err != nil {
+			return nil, err
+		}
+		if !r.MatchString(a.ForeignID) {
+			return nil, errors.New("invalid ForeignID")
+		}
 
-	input.ForeignID = a.ForeignID
+		input.ForeignID = a.ForeignID
+	}
 
 	input.To = []string{}
 
@@ -90,6 +92,10 @@ type postFlatFeedOutputActivity struct {
 	ForeignID string          `json:"foreign_id,omitempty"`
 	Data      json.RawMessage `json:"data,omitempty"`
 	To        [][]string      `json:"to,omitempty"`
+}
+
+type postFlatFeedOutputActivities struct {
+	Activities []*postFlatFeedOutputActivity `json:"activities"`
 }
 
 func (a postFlatFeedOutputActivity) Activity() *FlatFeedActivity {

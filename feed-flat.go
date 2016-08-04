@@ -69,17 +69,46 @@ func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, e
 	return output.Activity(), err
 }
 
-// func (f *FlatFeed) AddActivities(input []*PostFlatFeedInput) error {
-// 	signeds := make([]*Activity, len(input), len(input))
-// 	for i, activityInput := range input {
-// 		signedActivityInput := f.Client.signer.signActivity(*activityInput)
-// 		signeds[i] = signedActivityInput.Activity
-// 	}
-//
-// 	_ = signeds
-// 	// TODO: A result type to recieve the listing result.
-// 	panic("not yet implemented.")
-// }
+func (f *FlatFeed) AddActivities(activities []*FlatFeedActivity) ([]*FlatFeedActivity, error) {
+
+	var inputs []*postFlatFeedInputActivity
+
+	for _, activity := range activities {
+		activity, err := activity.input()
+		if err != nil {
+			return nil, err
+		}
+		inputs = append(inputs, activity)
+	}
+
+	payload, err := json.Marshal(map[string][]*postFlatFeedInputActivity{
+		"activities": inputs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/"
+
+	resultBytes, err := f.post(endpoint, f.Signature(), payload)
+	if err != nil {
+		return nil, err
+	}
+
+	output := &postFlatFeedOutputActivities{}
+	err = json.Unmarshal(resultBytes, output)
+	if err != nil {
+		return nil, err
+	}
+
+	var outputActivities []*FlatFeedActivity
+	for _, outputActivity := range output.Activities {
+		activity := outputActivity.Activity()
+		outputActivities = append(outputActivities, activity)
+	}
+
+	return outputActivities, err
+}
 
 // Activities returns a list of Activities for a FlatFeedGroup
 func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, error) {
