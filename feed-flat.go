@@ -108,11 +108,11 @@ func (f *FlatFeed) request(method, path string, signature string, payload []byte
 	}
 }
 
-func (f *FlatFeed) AddActivity(input *PostFlatFeedInput) (*PostFlatFeedOutput, error) {
+func (f *FlatFeed) AddActivity(activity *FlatFeedActivity) (*FlatFeedActivity, error) {
 
-	signedActivityInput := f.Client.signer.signActivity(*input)
+	input := activity.Input()
 
-	payload, err := json.Marshal(signedActivityInput.Activity)
+	payload, err := json.Marshal(input)
 	if err != nil {
 		fmt.Println("marshal input error")
 		return nil, err
@@ -125,26 +125,26 @@ func (f *FlatFeed) AddActivity(input *PostFlatFeedInput) (*PostFlatFeedOutput, e
 		return nil, err
 	}
 
-	output := &PostFlatFeedOutput{}
+	output := &postFlatFeedOutputActivity{}
 	err = json.Unmarshal(resultBytes, output)
 	if err != nil {
 		return nil, err
 	}
 
-	return output, err
+	return output.Activity(), err
 }
 
-func (f *FlatFeed) AddActivities(input []*PostFlatFeedInput) error {
-	signeds := make([]*Activity, len(input), len(input))
-	for i, activityInput := range input {
-		signedActivityInput := f.Client.signer.signActivity(*activityInput)
-		signeds[i] = signedActivityInput.Activity
-	}
-
-	_ = signeds
-	// TODO: A result type to recieve the listing result.
-	panic("not yet implemented.")
-}
+// func (f *FlatFeed) AddActivities(input []*PostFlatFeedInput) error {
+// 	signeds := make([]*Activity, len(input), len(input))
+// 	for i, activityInput := range input {
+// 		signedActivityInput := f.Client.signer.signActivity(*activityInput)
+// 		signeds[i] = signedActivityInput.Activity
+// 	}
+//
+// 	_ = signeds
+// 	// TODO: A result type to recieve the listing result.
+// 	panic("not yet implemented.")
+// }
 
 func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, error) {
 
@@ -155,13 +155,13 @@ func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, erro
 		return nil, err
 	}
 
-	output := &GetFlatFeedOutput{}
+	output := &getFlatFeedOutput{}
 	err = json.Unmarshal(result, output)
 	if err != nil {
 		return nil, err
 	}
 
-	return output, err
+	return output.Output(), err
 }
 
 func (f *FlatFeed) RemoveActivity(id string) error {

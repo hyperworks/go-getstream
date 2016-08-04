@@ -29,19 +29,3 @@ func (s Signer) generateToken(message string) string {
 	digest := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return s.urlSafe(digest)
 }
-
-func (s Signer) signActivity(activityInput PostFlatFeedInput) PostFlatFeedInput {
-	activityInput.Activity.To = []string{}
-
-	for _, feed := range activityInput.To {
-
-		to := feed.FeedID()
-		if feed.Token() != "" {
-			to += " " + feed.Token()
-		}
-
-		activityInput.Activity.To = append(activityInput.Activity.To, to)
-	}
-
-	return activityInput
-}
