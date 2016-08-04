@@ -19,6 +19,7 @@ func (s Signer) urlSafe(src string) string {
 	return src
 }
 
+// generateToken will user the Secret of the signer and the message passed as an argument to generate a Token
 func (s Signer) generateToken(message string) string {
 	hash := sha1.New()
 	hash.Write([]byte(s.Secret))
@@ -29,18 +30,14 @@ func (s Signer) generateToken(message string) string {
 	return s.urlSafe(digest)
 }
 
-func (s Signer) signFlatFeed(feed *FlatFeed) {
-	feed.Token = s.generateToken(feed.FeedSlug + feed.UserID)
-}
-
-func (s Signer) signActivity(activityInput PostActivityInput) PostActivityInput {
+func (s Signer) signActivity(activityInput PostFlatFeedInput) PostFlatFeedInput {
 	activityInput.Activity.To = []string{}
 
 	for _, feed := range activityInput.To {
 
-		to := feed.FlatFeedID()
-		if feed.Token != "" {
-			to += " " + s.generateToken(feed.FeedSlug+feed.UserID)
+		to := feed.FeedID()
+		if feed.Token() != "" {
+			to += " " + feed.Token()
 		}
 
 		activityInput.Activity.To = append(activityInput.Activity.To, to)

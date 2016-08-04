@@ -13,15 +13,27 @@ type AggregatedFeed struct {
 	Client   *Client
 	FeedSlug string
 	UserID   string
-	Token    string
+	token    string
 }
 
 func (f *AggregatedFeed) Signature() string {
-	return f.FeedSlug + f.UserID + " " + f.Token
+	return f.FeedSlug + f.UserID + " " + f.Token()
 }
 
-func (f *AggregatedFeed) FlatFeedID() string {
+func (f *AggregatedFeed) FeedID() string {
 	return f.FeedSlug + ":" + f.UserID
+}
+
+func (f *AggregatedFeed) SignFeed(signer *Signer) {
+	f.token = signer.generateToken(f.FeedSlug + f.UserID)
+}
+
+func (f *AggregatedFeed) Token() string {
+	return f.token
+}
+
+func (f *AggregatedFeed) GenerateToken(signer *Signer) string {
+	return signer.generateToken(f.FeedSlug + f.UserID)
 }
 
 // get request helper
@@ -59,7 +71,7 @@ func (f *AggregatedFeed) request(method, path string, signature string, payload 
 
 	// set the Auth headers for the http request
 	req.Header.Set("Content-Type", "application/json")
-	if f.Token != "" {
+	if f.Token() != "" {
 		req.Header.Set("Authorization", signature)
 	}
 
@@ -96,7 +108,7 @@ func (f *AggregatedFeed) request(method, path string, signature string, payload 
 	}
 }
 
-func (f *AggregatedFeed) AddActivity(input *PostActivityInput) (*PostActivityOutput, error) {
+func (f *AggregatedFeed) AddActivity(input *PostFlatFeedInput) (*PostFlatFeedOutput, error) {
 
 	signedActivityInput := f.Client.signer.signActivity(*input)
 
@@ -113,7 +125,7 @@ func (f *AggregatedFeed) AddActivity(input *PostActivityInput) (*PostActivityOut
 		return nil, err
 	}
 
-	output := &PostActivityOutput{}
+	output := &PostFlatFeedOutput{}
 	err = json.Unmarshal(resultBytes, output)
 	if err != nil {
 		return nil, err
@@ -122,7 +134,7 @@ func (f *AggregatedFeed) AddActivity(input *PostActivityInput) (*PostActivityOut
 	return output, err
 }
 
-func (f *AggregatedFeed) AddActivities(input []*PostActivityInput) error {
+func (f *AggregatedFeed) AddActivities(input []*PostFlatFeedInput) error {
 	signeds := make([]*Activity, len(input), len(input))
 	for i, activityInput := range input {
 		signedActivityInput := f.Client.signer.signActivity(*activityInput)
@@ -134,7 +146,7 @@ func (f *AggregatedFeed) AddActivities(input []*PostActivityInput) error {
 	panic("not yet implemented.")
 }
 
-func (f *AggregatedFeed) Activities(input *GetActivityInput) (*GetActivityOutput, error) {
+func (f *AggregatedFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, error) {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/"
 
@@ -143,7 +155,7 @@ func (f *AggregatedFeed) Activities(input *GetActivityInput) (*GetActivityOutput
 		return nil, err
 	}
 
-	output := &GetActivityOutput{}
+	output := &GetFlatFeedOutput{}
 	err = json.Unmarshal(result, output)
 	if err != nil {
 		return nil, err

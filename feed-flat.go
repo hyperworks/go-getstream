@@ -13,15 +13,27 @@ type FlatFeed struct {
 	Client   *Client
 	FeedSlug string
 	UserID   string
-	Token    string
+	token    string
 }
 
 func (f *FlatFeed) Signature() string {
-	return f.FeedSlug + f.UserID + " " + f.Token
+	return f.FeedSlug + f.UserID + " " + f.Token()
 }
 
-func (f *FlatFeed) FlatFeedID() string {
+func (f *FlatFeed) FeedID() string {
 	return f.FeedSlug + ":" + f.UserID
+}
+
+func (f *FlatFeed) SignFeed(signer *Signer) {
+	f.token = signer.generateToken(f.FeedSlug + f.UserID)
+}
+
+func (f *FlatFeed) Token() string {
+	return f.token
+}
+
+func (f *FlatFeed) GenerateToken(signer *Signer) string {
+	return signer.generateToken(f.FeedSlug + f.UserID)
 }
 
 // get request helper
@@ -59,7 +71,7 @@ func (f *FlatFeed) request(method, path string, signature string, payload []byte
 
 	// set the Auth headers for the http request
 	req.Header.Set("Content-Type", "application/json")
-	if f.Token != "" {
+	if f.Token() != "" {
 		req.Header.Set("Authorization", signature)
 	}
 
@@ -96,7 +108,7 @@ func (f *FlatFeed) request(method, path string, signature string, payload []byte
 	}
 }
 
-func (f *FlatFeed) AddActivity(input *PostActivityInput) (*PostActivityOutput, error) {
+func (f *FlatFeed) AddActivity(input *PostFlatFeedInput) (*PostFlatFeedOutput, error) {
 
 	signedActivityInput := f.Client.signer.signActivity(*input)
 
@@ -113,7 +125,7 @@ func (f *FlatFeed) AddActivity(input *PostActivityInput) (*PostActivityOutput, e
 		return nil, err
 	}
 
-	output := &PostActivityOutput{}
+	output := &PostFlatFeedOutput{}
 	err = json.Unmarshal(resultBytes, output)
 	if err != nil {
 		return nil, err
@@ -122,7 +134,7 @@ func (f *FlatFeed) AddActivity(input *PostActivityInput) (*PostActivityOutput, e
 	return output, err
 }
 
-func (f *FlatFeed) AddActivities(input []*PostActivityInput) error {
+func (f *FlatFeed) AddActivities(input []*PostFlatFeedInput) error {
 	signeds := make([]*Activity, len(input), len(input))
 	for i, activityInput := range input {
 		signedActivityInput := f.Client.signer.signActivity(*activityInput)
@@ -134,7 +146,7 @@ func (f *FlatFeed) AddActivities(input []*PostActivityInput) error {
 	panic("not yet implemented.")
 }
 
-func (f *FlatFeed) Activities(input *GetActivityInput) (*GetActivityOutput, error) {
+func (f *FlatFeed) Activities(input *GetFlatFeedInput) (*GetFlatFeedOutput, error) {
 
 	endpoint := "feed/" + f.FeedSlug + "/" + f.UserID + "/"
 
@@ -143,7 +155,7 @@ func (f *FlatFeed) Activities(input *GetActivityInput) (*GetActivityOutput, erro
 		return nil, err
 	}
 
-	output := &GetActivityOutput{}
+	output := &GetFlatFeedOutput{}
 	err = json.Unmarshal(result, output)
 	if err != nil {
 		return nil, err

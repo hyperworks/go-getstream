@@ -61,7 +61,7 @@ func (c *Client) FlatFeed(feedSlug string, userID string) *FlatFeed {
 		UserID:   userID,
 	}
 
-	c.signer.signFlatFeed(feed)
+	feed.SignFeed(c.signer)
 	return feed
 }
 
